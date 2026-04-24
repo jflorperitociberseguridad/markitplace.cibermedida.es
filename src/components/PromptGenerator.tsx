@@ -41,7 +41,7 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
   const generatePrompt = async () => {
     if (!topic) {
-      toast.error("Please enter a topic for the prompt");
+      toast.error("Por favor, introduce un tema o tarea para el prompt");
       return;
     }
 
@@ -70,10 +70,10 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
       newDb.stats.totalTokens += result.length / 4;
       updateDb(newDb);
       
-      toast.success("Prompt engineered successfully");
+      toast.success("Prompt generado con éxito");
     } catch (error) {
       console.error(error);
-      toast.error("AI Node connection error");
+      toast.error("Error de conexión con el Nodo IA");
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
     navigator.clipboard.writeText(generatedPrompt);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast.success("Copied to vault");
+    toast.success("Copiado a la clipboard");
   };
 
   const savePrompt = () => {
@@ -102,17 +102,17 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
     const newDb = { ...db, prompts: [newPrompt, ...db.prompts] };
     updateDb(newDb);
-    toast.success("Artifact stored in Lab");
+    toast.success("Artefacto guardado en el Lab");
   };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-700">
       <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Laboratory / <span className="text-indigo-600">Prompt Engineering Node</span>
+          Laboratorio / <span className="text-indigo-600">Nodo de Ingeniería de Prompts</span>
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Advanced Prompt Lab</h2>
-        <p className="text-sm text-slate-500">Configure parameters to generate high-precision AI directives.</p>
+        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Lab de Prompts Avanzado</h2>
+        <p className="text-sm text-slate-500">Configura parámetros para generar directivas de IA de alta precisión.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -120,7 +120,7 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
         <Card className="rounded-xl border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Settings2 className="w-4 h-4 text-indigo-500" /> Parameter Matrix
+              <Settings2 className="w-4 h-4 text-indigo-500" /> Matriz de Parámetros
             </CardTitle>
             <Button 
                 variant="ghost" 
@@ -128,14 +128,14 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
                 className="h-7 text-[10px] font-bold text-slate-400 hover:text-indigo-600 uppercase"
                 onClick={() => { setTopic(""); setAudience(""); setGeneratedPrompt(""); }}
               >
-                <RefreshCcw className="w-3 h-3 mr-2" /> Reset
+                <RefreshCcw className="w-3 h-3 mr-2" /> Reiniciar
             </Button>
           </CardHeader>
           <CardContent className="space-y-6 pt-6 flex-1">
             <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mission Objective</Label>
+              <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Objetivo de la Misión</Label>
               <Textarea 
-                placeholder="Describe the desired AI behavior or task..." 
+                placeholder="Describe el comportamiento o tarea deseada de la IA..." 
                 className="rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none h-24 text-sm"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
@@ -144,26 +144,26 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Target Audience</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Público Objetivo</Label>
                 <Input 
-                  placeholder="e.g. Data Scientists" 
+                  placeholder="ej. Científicos de Datos" 
                   className="rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
                   value={audience}
                   onChange={(e) => setAudience(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Output Signature</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Firma de Salida</Label>
                 <Select value={format} onValueChange={setFormat}>
                   <SelectTrigger className="rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-200">
-                    <SelectItem value="text">PLAIN TEXT</SelectItem>
-                    <SelectItem value="json">JSON SCHEMA</SelectItem>
-                    <SelectItem value="steps">PROCEDURAL STEPS</SelectItem>
-                    <SelectItem value="markdown">MARKDOWN TABLES</SelectItem>
-                    <SelectItem value="python">PYTHON LOGIC</SelectItem>
+                    <SelectItem value="text">TEXTO PLANO</SelectItem>
+                    <SelectItem value="json">ESQUEMA JSON</SelectItem>
+                    <SelectItem value="steps">PASOS PRECEDURALES</SelectItem>
+                    <SelectItem value="markdown">TABLAS MARKDOWN</SelectItem>
+                    <SelectItem value="python">LÓGICA PYTHON</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -171,30 +171,30 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Writing Archetype</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Arquetipo de Escritura</Label>
                 <Select value={style} onValueChange={setStyle}>
                   <SelectTrigger className="rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-200">
-                    <SelectItem value="professional">PROFESSIONAL</SelectItem>
-                    <SelectItem value="creative">CREATIVE</SelectItem>
-                    <SelectItem value="technical">TECHNICAL</SelectItem>
-                    <SelectItem value="minimal">MINIMALIST</SelectItem>
-                    <SelectItem value="academic">ACADEMIC</SelectItem>
+                    <SelectItem value="professional">PROFESIONAL</SelectItem>
+                    <SelectItem value="creative">CREATIVO</SelectItem>
+                    <SelectItem value="technical">TÉCNICO</SelectItem>
+                    <SelectItem value="minimal">MINIMALISTA</SelectItem>
+                    <SelectItem value="academic">ACADÉMICO</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Density Level</Label>
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nivel de Densidad</Label>
                 <Select value={detail} onValueChange={setDetail}>
                   <SelectTrigger className="rounded-lg border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl border-slate-200">
-                    <SelectItem value="brief">CONCISE</SelectItem>
-                    <SelectItem value="medium">BALANCED</SelectItem>
-                    <SelectItem value="extensive">COMPREHENSIVE</SelectItem>
+                    <SelectItem value="brief">CONCISO</SelectItem>
+                    <SelectItem value="medium">EQUILIBRADO</SelectItem>
+                    <SelectItem value="extensive">EXHAUSTIVO</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -206,7 +206,7 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
               disabled={loading}
             >
               {loading ? <RefreshCcw className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2 group-hover:rotate-12 transition-transform" />}
-              {loading ? "Constructing directive..." : "Engineering Prompt"}
+              {loading ? "Construyendo directiva..." : "Generar Prompt"}
             </Button>
           </CardContent>
         </Card>
@@ -215,10 +215,10 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
         <Card className="rounded-xl border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col relative">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-indigo-500" /> Compiled Output
+              <Terminal className="w-4 h-4 text-indigo-500" /> Resultado Compilado
             </CardTitle>
             {generatedPrompt && (
-              <span className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded uppercase">Logic Validated</span>
+              <span className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded uppercase">Lógica Validada</span>
             )}
           </CardHeader>
           <CardContent className="pt-6 flex-1 flex flex-col min-h-[400px]">
@@ -242,13 +242,13 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
                     className="flex-1 rounded-xl border-2 border-slate-200 bg-white text-slate-900 hover:bg-slate-50 font-bold uppercase text-xs h-12 transition-colors shadow-sm"
                     onClick={savePrompt}
                   >
-                    <Save className="w-4 h-4 mr-2" /> Stash in Hub
+                    <Save className="w-4 h-4 mr-2" /> Guardar en Hub
                   </Button>
                   <Button 
                     className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-indigo-600 font-bold uppercase text-xs h-12 transition-colors shadow-lg shadow-slate-200"
                     onClick={generatePrompt}
                   >
-                    <RefreshCcw className="w-4 h-4 mr-2" /> Re-construct
+                    <RefreshCcw className="w-4 h-4 mr-2" /> Re-construir
                   </Button>
                 </div>
               </div>
@@ -257,7 +257,7 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
                 <div className="p-4 bg-slate-50 rounded-full mb-4">
                   <Terminal className="w-10 h-10 text-slate-200" />
                 </div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Parameter Injection...</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Esperando Inyección de Parámetros...</p>
               </div>
             )}
           </CardContent>

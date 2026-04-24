@@ -9,6 +9,7 @@ import { Dashboard } from "./components/Dashboard";
 import { PromptGenerator } from "./components/PromptGenerator";
 import { AutomationHub } from "./components/AutomationHub";
 import { MarkdownDownloader } from "./components/MarkdownDownloader";
+import { Settings } from "./components/Settings";
 import { Toaster } from "@/components/ui/sonner";
 import { DB } from "./types";
 import axios from "axios";
@@ -47,7 +48,18 @@ export default function App() {
       <div className="flex items-center justify-center h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing PromptCore...</div>
+          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Iniciando PromptCore...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!db) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-4 text-center p-8">
+          <div className="text-rose-500 font-bold">FATAL ERROR: DB CONNECTION FAILED</div>
+          <p className="text-sm text-slate-500 max-w-md">No se pudo conectar con el motor de base de datos de CyberMedida. Por favor, reinicia el servidor.</p>
         </div>
       </div>
     );
@@ -63,6 +75,7 @@ export default function App() {
           {activeTab === "prompts" && <PromptGenerator db={db!} updateDb={updateDb} />}
           {activeTab === "automation" && <AutomationHub db={db!} updateDb={updateDb} />}
           {activeTab === "markdown" && <MarkdownDownloader db={db!} updateDb={updateDb} />}
+          {activeTab === "settings" && <Settings db={db!} updateDb={updateDb} />}
         </div>
       </main>
       

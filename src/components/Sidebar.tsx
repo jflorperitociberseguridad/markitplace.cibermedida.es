@@ -6,7 +6,8 @@ import {
   FileText, 
   History, 
   Settings,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from "lucide-react";
 
 interface SidebarProps {
@@ -16,10 +17,11 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "prompts", label: "Prompt Lab", icon: Terminal },
-    { id: "automation", label: "Automations", icon: Zap },
-    { id: "markdown", label: "MarkItDown", icon: FileText },
+    { id: "dashboard", label: "Panel de Control", icon: LayoutDashboard },
+    { id: "prompts", label: "Lab de Prompts", icon: Terminal },
+    { id: "automation", label: "Automatizaciones", icon: Zap },
+    { id: "markdown", label: "MarkDown Pro", icon: FileText },
+    { id: "settings", label: "Configuración", icon: Settings },
   ];
 
   return (
@@ -54,7 +56,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
       <div className="p-4 mt-auto">
         <div className="bg-indigo-600/10 border border-indigo-500/20 rounded-xl p-4">
-          <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-2">Token Usage</p>
+          <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mb-2">Uso de Tokens</p>
           <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2">
             <div className="bg-indigo-500 h-full w-[64%] shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
           </div>
@@ -62,11 +64,11 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         </div>
         
         <div className="mt-6 flex items-center justify-between px-2">
-          <button className="flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors">
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" title="System Online"></div>
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Activity className="w-4 h-4" />
+            v2.4.0
+          </div>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" title="Sistema Online"></div>
         </div>
       </div>
     </div>

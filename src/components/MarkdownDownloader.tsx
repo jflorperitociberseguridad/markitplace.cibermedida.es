@@ -33,7 +33,7 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       setFile(acceptedFiles[0]);
-      toast.success(`Interpreted: ${acceptedFiles[0].name}`);
+      toast.success(`Interpretado: ${acceptedFiles[0].name}`);
     }
   }, []);
 
@@ -58,10 +58,10 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
       const updatedDb = await axios.get("/api/db");
       updateDb(updatedDb.data);
       
-      toast.success("Extraction sequence complete");
+      toast.success("Secuencia de extracción completa");
     } catch (error) {
       console.error(error);
-      toast.error("MarkDown Node failure");
+      toast.error("Fallo en el nodo MarkDown");
     } finally {
       setIsProcessing(false);
     }
@@ -77,17 +77,17 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success("Stream downloaded to disk");
+    toast.success("Stream descargado a disco");
   };
 
   return (
     <div className="space-y-8 animate-in zoom-in-95 duration-700">
       <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Processor / <span className="text-indigo-600">MarkItDown Engine</span>
+          Procesador / <span className="text-indigo-600">Motor MarkItDown</span>
         </div>
         <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">MarkDown Pro</h2>
-        <p className="text-sm text-slate-500">Professional-grade document conversion and extraction pipeline.</p>
+        <p className="text-sm text-slate-500">Pipeline profesional de conversión de documentos y extracción de datos.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -96,7 +96,7 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
           <Card className="rounded-xl border-slate-200 shadow-sm bg-white overflow-hidden">
             <CardHeader className="bg-slate-50 border-b border-slate-100 p-4">
               <CardTitle className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-slate-500">
-                <Upload className="w-4 h-4" /> Data Ingestion
+                <Upload className="w-4 h-4" /> Ingesta de Datos
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
@@ -111,10 +111,10 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
                   <div className="bg-white p-5 rounded-2xl text-slate-400 mb-4 shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
                     <Upload className="w-8 h-8" />
                   </div>
-                  <h4 className="text-sm font-bold text-slate-800">Drop files for conversion</h4>
-                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">PDF, DOCX, XLSX, HTML, TXT</p>
+                  <h4 className="text-sm font-bold text-slate-800">Suelte archivos para convertir</h4>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">PDF, DOCX, XLSX, IMG, HTML, TXT</p>
                   <Button variant="outline" className="mt-8 rounded-lg border-slate-200 text-indigo-600 font-bold text-[10px] uppercase h-9 shadow-sm">
-                    Select From Local Disk
+                    Seleccionar desde Disco Local
                   </Button>
                 </div>
               ) : (
@@ -138,7 +138,7 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
                     disabled={isProcessing}
                   >
                     {isProcessing ? <Sparkles className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
-                    {isProcessing ? "Processing Stream..." : "Convert to Markdown"}
+                    {isProcessing ? "Procesando Stream..." : "Convertir a Markdown"}
                   </Button>
                 </div>
               )}
@@ -146,17 +146,17 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
           </Card>
 
           <Card className="rounded-xl border-slate-200 shadow-sm bg-slate-900 text-white overflow-hidden p-8 relative">
-            <h3 className="text-xl font-extrabold tracking-tighter italic uppercase z-10 relative">MarkItPlace Node</h3>
+            <h3 className="text-xl font-extrabold tracking-tighter italic uppercase z-10 relative">Nodo MarkItPlace</h3>
             <p className="text-[11px] font-medium text-slate-400 uppercase z-10 relative mt-2 leading-relaxed tracking-wider">
-              Service Optimized: <br />
+              Servicio Optimizado: <br />
               <span className="text-indigo-400 font-bold">MARKITPLACE.CIBERMEDIDA.ES</span>
             </p>
             <div className="mt-8 flex items-center justify-between z-10 relative border-t border-white/10 pt-6">
               <div className="flex items-center gap-2">
                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                 <span className="text-[10px] font-bold tracking-widest uppercase">Node Ready</span>
+                 <span className="text-[10px] font-bold tracking-widest uppercase">Nodo Listo</span>
               </div>
-              <div className="text-[10px] font-bold text-white/40 tracking-widest uppercase">Latency: 152ms</div>
+              <div className="text-[10px] font-bold text-white/40 tracking-widest uppercase">Latencia: 152ms</div>
             </div>
             <div className="absolute top-0 right-0 p-4 opacity-5 blur-sm scale-150 rotate-12">
                 <FileText className="w-32 h-32" />
@@ -171,10 +171,10 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
                <Tabs value={currentView} onValueChange={setCurrentView} className="bg-white rounded-lg p-1 border border-slate-200 shadow-sm">
                   <TabsList className="bg-transparent h-8 p-0">
                     <TabsTrigger value="preview" className="rounded-md h-full text-[10px] font-bold px-4 data-[state=active]:bg-slate-900 data-[state=active]:text-white transition-all uppercase">
-                      <Eye className="w-3 h-3 mr-2" /> Preview
+                      <Eye className="w-3 h-3 mr-2" /> Previsualizar
                     </TabsTrigger>
                     <TabsTrigger value="edit" className="rounded-md h-full text-[10px] font-bold px-4 data-[state=active]:bg-slate-900 data-[state=active]:text-white transition-all uppercase">
-                      <Edit3 className="w-3 h-3 mr-2" /> Raw MD
+                      <Edit3 className="w-3 h-3 mr-2" /> MD Crudo
                     </TabsTrigger>
                   </TabsList>
                </Tabs>
@@ -185,7 +185,7 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
                    className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] h-9 uppercase px-5 shadow-lg shadow-emerald-100 transition-all"
                    onClick={downloadMarkdown}
                  >
-                   <Download className="w-3.5 h-3.5 mr-2" /> Download Bundle
+                   <Download className="w-3.5 h-3.5 mr-2" /> Descargar Paquete
                  </Button>
                )}
             </header>
@@ -207,7 +207,7 @@ export function MarkdownDownloader({ db, updateDb }: MarkdownDownloaderProps) {
                   <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-50 mb-4 opacity-50">
                     <FileText className="w-12 h-12 text-slate-200" />
                   </div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Extraction Stream...</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Esperando Stream de Extracción...</p>
                 </div>
               )}
             </CardContent>

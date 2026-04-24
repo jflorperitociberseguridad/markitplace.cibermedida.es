@@ -43,18 +43,18 @@ export function Dashboard({ db }: DashboardProps) {
     <div className="space-y-8 animate-in fade-in duration-700">
       <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
         <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Projects / <span className="text-indigo-600">CyberMedida WebApp v2.1</span>
+          Proyectos / <span className="text-indigo-600">CyberMedida WebApp v2.1</span>
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Dashboard Overview</h2>
-        <p className="text-sm text-slate-500">Global system performance and resource allocation.</p>
+        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Vista General</h2>
+        <p className="text-sm text-slate-500">Rendimiento global del sistema y asignación de recursos.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Tokens Generated", value: db.stats.totalTokens.toLocaleString(), icon: Coins, color: "text-indigo-600", bg: "bg-indigo-50" },
-          { label: "Estimated Savings", value: `$${db.stats.totalSavings.toFixed(2)}`, icon: PiggyBank, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "MarkitDown Assets", value: db.stats.filesProcessed, icon: Files, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "System Health", value: "98.2%", icon: Activity, color: "text-rose-600", bg: "bg-rose-50" },
+          { label: "Tokens Generados", value: db.stats.totalTokens.toLocaleString(), icon: Coins, color: "text-indigo-600", bg: "bg-indigo-50" },
+          { label: "Ahorro Estimado", value: `$${db.stats.totalSavings.toFixed(2)}`, icon: PiggyBank, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Archivos Procesados", value: db.stats.filesProcessed, icon: Files, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Salud del Sistema", value: "98.2%", icon: Activity, color: "text-rose-600", bg: "bg-rose-50" },
         ].map((stat, i) => (
           <Card key={i} className="rounded-xl border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-white overflow-hidden group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -67,7 +67,7 @@ export function Dashboard({ db }: DashboardProps) {
               <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
               <div className="flex items-center gap-1 mt-2 text-[10px] text-emerald-600 font-bold">
                 <TrendingUp className="w-3 h-3" />
-                <span>+12.5% vs LAST PERIOD</span>
+                <span>+12.5% vs ÚLTIMO PERIODO</span>
               </div>
             </CardContent>
           </Card>
@@ -78,9 +78,9 @@ export function Dashboard({ db }: DashboardProps) {
         <Card className="lg:col-span-2 rounded-xl border-slate-200 shadow-sm bg-white overflow-hidden">
           <CardHeader className="border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <Zap className="w-4 h-4 text-indigo-500" /> Resource Allocation Intensity
+              <Zap className="w-4 h-4 text-indigo-500" /> Intensidad de Asignación de Recursos
             </CardTitle>
-            <CardDescription className="text-xs">Token consumption trends across active modules (7d window)</CardDescription>
+            <CardDescription className="text-xs">Tendencias de consumo de tokens en módulos activos (7 días)</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="h-[320px] w-full">
@@ -117,8 +117,8 @@ export function Dashboard({ db }: DashboardProps) {
         <Card className="rounded-xl border-slate-200 shadow-sm bg-white overflow-hidden">
           <CardHeader className="border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-sm font-bold flex items-center justify-between">
-              Activity Vault
-              <button className="text-[10px] text-indigo-600 hover:underline">VIEW ALL</button>
+              Registro de Actividad
+              <button className="text-[10px] text-indigo-600 hover:underline">VER TODO</button>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">

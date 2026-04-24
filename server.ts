@@ -27,14 +27,39 @@ if (!fs.existsSync(DB_FILE)) {
   fs.writeFileSync(
     DB_FILE,
     JSON.stringify({
-      prompts: [],
+      prompts: [
+        {
+          id: "1",
+          title: "Triaje de Emails Inteligente",
+          content: "import { gmail, ai, slack } from '@cybermedida/core';\n\n// Procesa correos entrantes y clasifica por urgencia\nconst emails = await gmail.getUnread();\nfor (const mail of emails) {\n  const analysis = await ai.analyze(mail.body);\n  if (analysis.urgency === 'crítica') {\n    await slack.notify('#incidentes', `Alerta: ${mail.subject}`);\n  }\n}",
+          isFavorite: true,
+          tags: ["comunicación", "ia"],
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: "2",
+          title: "Sincronización Webhook CRM",
+          content: "// Conecta Stripe con HubSpot automáticamente\napp.post('/webhooks/stripe', async (req) => {\n  const event = req.body;\n  if (event.type === 'customer.subscription.created') {\n    await hubspot.contacts.create({\n      email: event.data.object.customer_email,\n      status: 'active'\n    });\n  }\n});",
+          isFavorite: false,
+          tags: ["ventas", "crm"],
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: "3",
+          title: "Monitor de Logs CyberMedida",
+          content: "// Auditoría de seguridad continua\nconst logs = await system.getLogs('auth.log');\nconst anomalies = await ai.detectAnomalies(logs);\nif (anomalies.length > 0) {\n  await telegram.send('Aviso de Seguridad: Se detectaron patrones de acceso inusuales.');\n}",
+          isFavorite: true,
+          tags: ["seguridad", "devops"],
+          createdAt: new Date().toISOString()
+        }
+      ],
       automations: [],
       stats: {
         totalTokens: 0,
         totalSavings: 0,
         filesProcessed: 0,
       },
-    })
+    }, null, 2)
   );
 }
 
@@ -97,10 +122,14 @@ async function startServer() {
         
         // Final fallback for demo/preview where python might not be set up
         const extension = path.extname(req.file.originalname).toLowerCase();
+        const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"];
+        
         if ([".txt", ".md", ".json", ".js", ".ts"].includes(extension)) {
           markdown = fs.readFileSync(filePath, "utf-8");
+        } else if (imageExtensions.includes(extension)) {
+          markdown = `# Análisis de Imagen: ${req.file.originalname}\n\n**Estado:** Procesado como recurso visual.\n\nEl motor MarkItDown utiliza OCR (Reconocimiento Óptico de Caracteres) para extraer texto de imágenes. En este entorno de demostración, estamos simulando la extracción estructurada.\n\n![${req.file.originalname}](https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800)\n\n---\n*Metadatos de la Muestra:*\n- Tipo: ${req.file.mimetype}\n- Tamaño: ${(req.file.size / 1024).toFixed(2)} KB\n- Dimensión Detectada: 1920x1080 (Simulado)`;
         } else {
-          markdown = `# ${req.file.originalname}\n\n**Extraction Report:**\n\nThis document was processed using the MarkItDown protocol. In your production VPS, ensure \`pip install markitdown\` is run to enable full binary extraction (PDF, DOCX, etc).\n\n---\n\n## Data Stream Sample\n\n\`\`\`\n${fs.readFileSync(filePath, "utf-8").slice(0, 800)}...\n\`\`\`\n\n*System Status: Ready for Production Deployment*`;
+          markdown = `# ${req.file.originalname}\n\n**Informe de Extracción:**\n\nEste documento fue procesado mediante el protocolo MarkItDown. En su VPS de producción, asegúrese de ejecutar \`pip install markitdown\` para habilitar la extracción binaria completa (PDF, DOCX, etc).\n\n---\n\n## Muestra del Flujo de Datos\n\n\`\`\`\n${fs.readFileSync(filePath, "utf-8").slice(0, 800)}...\n\`\`\`\n\n*Estado del Sistema: Listo para Despliegue en Producción*`;
         }
       }
       
