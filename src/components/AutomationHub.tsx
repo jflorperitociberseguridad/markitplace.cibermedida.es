@@ -59,6 +59,13 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<string | null>(null);
   
+  const ALL_CATEGORIES = [
+    "comunicación", "ia", "ventas", "seguridad", "datos", 
+    "crm", "marketing", "finanzas", "rrhh", "logística",
+    "operaciones", "legal", "e-commerce", "soporte", "desarrollo",
+    "infraestructura", "analítica", "social", "productividad", "automatización"
+  ];
+  
   // Consultant State
   const [isConsultantOpen, setIsConsultantOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -93,7 +100,16 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
     setIsThinking(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env as any).GEMINI_API_KEY });
+      const userApiKey = localStorage.getItem("GEMINI_API_KEY");
+      const apiKey = userApiKey || (process.env as any).GEMINI_API_KEY;
+      
+      if (!apiKey) {
+        toast.error("Falta la API Key de Gemini. Configúrala en Ajustes.");
+        setIsThinking(false);
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
       
       const history = messages.map(m => ({
         role: m.role,
@@ -136,7 +152,12 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
   };
 
   const [isNewScriptOpen, setIsNewScriptOpen] = useState(false);
-  const [newScript, setNewScript] = useState({ title: "", content: "", category: "comunicación" });
+  const [newScript, setNewScript] = useState({ 
+    title: "", 
+    content: "", 
+    category: "comunicación",
+    secondaryTags: ""
+  });
 
   const handleCreateScript = () => {
     if (!newScript.title || !newScript.content) {
@@ -144,19 +165,26 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
       return;
     }
 
+    const additionalTags = newScript.secondaryTags
+      .split(",")
+      .map(t => t.trim().toLowerCase())
+      .filter(t => t !== "");
+
     const scriptToAdd: SavedPrompt = {
       id: Math.random().toString(36).substr(2, 9),
       title: newScript.title,
       content: newScript.content,
-      tags: [newScript.category],
+      tags: [newScript.category, ...additionalTags],
       isFavorite: false,
-      createdAt: new Date().toISOString()
+      createdAt: Date.now(),
+      type: 'automation',
+      category: newScript.category
     };
 
     const newDb = { ...db, prompts: [scriptToAdd, ...db.prompts] };
     updateDb(newDb);
     setIsNewScriptOpen(false);
-    setNewScript({ title: "", content: "", category: "comunicación" });
+    setNewScript({ title: "", content: "", category: "comunicación", secondaryTags: "" });
     toast.success("Nuevo script añadido a la bóveda");
   };
 
@@ -252,13 +280,23 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
                   <SelectValue placeholder="Selecciona una categoría" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200">
-                  <SelectItem value="comunicación">Comunicación</SelectItem>
-                  <SelectItem value="ia">Inteligencia Artificial</SelectItem>
-                  <SelectItem value="ventas">Ventas & CRM</SelectItem>
-                  <SelectItem value="seguridad">CyberSeguridad</SelectItem>
-                  <SelectItem value="datos">Análisis de Datos</SelectItem>
+                  {ALL_CATEGORIES.map(cat => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="secondaryTags" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tags Secundarios (separados por coma)</Label>
+              <Input 
+                id="secondaryTags" 
+                placeholder="Ej: gmail, slack, urgente" 
+                className="rounded-xl border-slate-200 focus:ring-2 focus:ring-indigo-600 h-11"
+                value={newScript.secondaryTags}
+                onChange={(e) => setNewScript({ ...newScript, secondaryTags: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="content" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lógica del Script (Código/Prompt)</Label>
@@ -385,22 +423,22 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
               </div>
               
               <div className="space-y-3">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clasificación</label>
-                <div className="flex flex-wrap gap-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Clasificación Principal</label>
+                <div className="flex flex-wrap gap-1.5 max-h-[300px] overflow-y-auto p-1 scrollbar-hide">
                   <Badge 
                     variant={filter === null ? "default" : "outline"}
-                    className={cn("rounded-lg text-[10px] font-bold cursor-pointer transition-all", 
+                    className={cn("rounded-lg text-[10px] font-bold cursor-pointer transition-all h-7 px-3", 
                       filter === null ? "bg-slate-900 text-white" : "border-slate-200 text-slate-500 hover:border-slate-300"
                     )}
                     onClick={() => setFilter(null)}
                   >
                     TODO EL INVENTARIO
                   </Badge>
-                  {categories.map(cat => (
+                  {ALL_CATEGORIES.map(cat => (
                     <Badge 
                       key={cat}
                       variant={filter === cat ? "default" : "outline"}
-                      className={cn("rounded-lg text-[10px] font-bold cursor-pointer transition-all",
+                      className={cn("rounded-lg text-[10px] font-bold cursor-pointer transition-all h-7 px-3",
                         filter === cat ? "bg-indigo-600 text-white" : "border-slate-200 text-slate-500 hover:border-slate-300"
                       )}
                       onClick={() => setFilter(cat)}
