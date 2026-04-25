@@ -23,6 +23,7 @@ import {
   Rocket
 } from "lucide-react";
 import { DB, SavedPrompt } from "../types";
+import { getAIConfig } from "../aiConfig";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import axios from "axios";
@@ -100,10 +101,13 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
     setIsThinking(true);
 
     try {
+      const { provider, model, apiKey } = getAIConfig();
       const response = await axios.post("/api/automation-chat", {
         messages,
         text: userMessage.text,
-        apiKey: localStorage.getItem("GEMINI_API_KEY")
+        apiKey,
+        provider,
+        model,
       });
 
       const modelMessage: Message = { 
