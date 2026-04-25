@@ -21,6 +21,7 @@ import {
   Check
 } from "lucide-react";
 import { DB, SavedPrompt } from "../types";
+import { getAIConfig } from "../aiConfig";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -47,13 +48,16 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
     setLoading(true);
     try {
+      const { provider, model, apiKey } = getAIConfig();
       const payload = {
         topic,
         audience,
         format,
         style,
         detail,
-        apiKey: localStorage.getItem("GEMINI_API_KEY")
+        apiKey,
+        provider,
+        model,
       };
 
       const response = await axios.post("/api/generate-prompt", payload);
