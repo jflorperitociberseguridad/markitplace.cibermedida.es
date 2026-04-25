@@ -82,11 +82,12 @@ export function Settings({ db, updateDb }: SettingsProps) {
     toast.loading("Iniciando escaneo de integridad...", { id: "scan" });
     
     setTimeout(() => {
+      const currentKey = localStorage.getItem("GEMINI_API_KEY");
       setServiceStatus([
         { name: "Motor MarkItDown", status: "Operational", active: true },
         { name: "IA Prompt Generator", status: "Operational", active: true },
         { name: "Base de Datos Pro", status: "Connected", active: true },
-        { name: "Gemini AI Engine", status: config.geminiApiKey ? "Operational" : "Waiting Config", active: !!config.geminiApiKey },
+        { name: "Gemini AI Engine", status: currentKey ? "Operational" : "Waiting Config", active: !!currentKey },
       ]);
       setIsScanning(false);
       toast.success("Integridad verificada: 100% Operacional", { id: "scan" });
@@ -207,27 +208,25 @@ export function Settings({ db, updateDb }: SettingsProps) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-top duration-700">
-      <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Sistema / <span className="text-indigo-600">Configuración Central</span>
-            </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Configuración del Sistema</h2>
-            <p className="text-sm text-slate-500">Gestión de recursos, seguridad y mantenimiento de nodos.</p>
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-1">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Sistema / <span className="text-indigo-600">Configuración Central</span>
           </div>
-          <div className="flex gap-3">
-            <Button 
-              variant="outline"
-              onClick={() => setIsLocked(true)}
-              className="rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-bold uppercase tracking-widest text-[10px] h-10 px-6 transition-all"
-            >
-              <Lock className="w-4 h-4 mr-2" /> Bloquear
-            </Button>
-            <Button onClick={saveAll} className="rounded-xl bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-slate-100 transition-all">
-              <CheckCircle2 className="w-4 h-4 mr-2" /> Guardar Todo
-            </Button>
-          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Configuración del Sistema</h2>
+          <p className="text-sm text-slate-500">Gestión de recursos, seguridad y mantenimiento de nodos.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            variant="outline"
+            onClick={() => setIsLocked(true)}
+            className="rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-bold uppercase tracking-widest text-[10px] h-10 px-6 transition-all flex-1 sm:flex-none"
+          >
+            <Lock className="w-4 h-4 mr-2" /> Bloquear
+          </Button>
+          <Button onClick={saveAll} className="rounded-xl bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-slate-100 transition-all flex-1 sm:flex-none">
+            <CheckCircle2 className="w-4 h-4 mr-2" /> Guardar Todo
+          </Button>
         </div>
       </header>
 

@@ -15,21 +15,39 @@ import {
   Sparkles,
   RefreshCw,
   X,
-  FileCheck
+  FileCheck,
+  Terminal,
+  Cpu,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import axios from "axios";
-
 import { DB } from "../types";
 
 export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB) => void }) {
   const [markdown, setMarkdown] = useState<string>("");
+  const [generatedCode, setGeneratedCode] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState("python");
   const [isUploading, setIsUploading] = useState(false);
-  const [viewMode, setViewMode] = useState<"edit" | "preview">("preview");
+  const [isTransforming, setIsTransforming] = useState(false);
+  const [viewMode, setViewMode] = useState<"edit" | "preview" | "code">("preview");
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+
+  const LANGUAGES = [
+    { id: "python", name: "Python", icon: <Terminal className="w-4 h-4" />, ext: "py", mime: "text/x-python" },
+    { id: "mojo", name: "Mojo", icon: <Zap className="w-4 h-4" />, ext: "mojo", mime: "text/x-python" },
+    { id: "julia", name: "Julia", icon: <Cpu className="w-4 h-4" />, ext: "jl", mime: "text/x-julia" },
+    { id: "javascript", name: "Node.js", icon: <Code className="w-4 h-4" />, ext: "js", mime: "application/javascript" },
+    { id: "typescript", name: "TypeScript", icon: <FileCode className="w-4 h-4" />, ext: "ts", mime: "text/typescript" },
+    { id: "java", name: "Java", icon: <Cpu className="w-4 h-4" />, ext: "java", mime: "text/x-java-source" },
+    { id: "cpp", name: "C++", icon: <Terminal className="w-4 h-4" />, ext: "cpp", mime: "text/x-c++src" },
+    { id: "rust", name: "Rust", icon: <Zap className="w-4 h-4" />, ext: "rs", mime: "text/x-rustsource" },
+    { id: "go", name: "Go", icon: <Cpu className="w-4 h-4" />, ext: "go", mime: "text/x-go" },
+    { id: "sql", name: "SQL", icon: <FileText className="w-4 h-4" />, ext: "sql", mime: "text/x-sql" },
+  ];
 
   const handleFileUpload = async (selectedFile: File) => {
     setFile(selectedFile);
@@ -58,6 +76,109 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
     }
   };
 
+  const transformToCode = async (silent = false) => {
+    if (!markdown) return null;
+    
+    setIsTransforming(true);
+    try {
+      const currentLang = LANGUAGES.find(l => l.id === selectedLanguage) || LANGUAGES[0];
+      
+      const response = await axios.post("/api/transform", {
+        markdown,
+        language: currentLang.name
+      });
+
+      const code = response.data.code || "";
+      
+      setGeneratedCode(code);
+      if (!silent) {
+        setViewMode("code");
+        toast.success(`Transformación a ${currentLang.name} Completa`, {
+          description: "El código ha sido generado y está listo para descargar."
+        });
+      }
+      return code;
+    } catch (error: any) {
+      console.error("Transformation error:", error);
+      const errorMsg = error.response?.data?.details || error.message;
+      if (!silent) {
+        toast.error("Error de IA", { description: errorMsg || "No se pudo realizar la transformación de código." });
+      }
+      return null;
+    } finally {
+      setIsTransforming(false);
+    }
+  };
+
+  const handleExportCode = async () => {
+    if (!markdown) {
+      toast.error("Operación no permitida", { description: "Primero debes tener contenido extraído en Markdown." });
+      return;
+    }
+
+    if (generatedCode) {
+      downloadCode();
+    } else {
+      toast.loading("Generando lógica...", { id: "export-transform" });
+      const code = await transformToCode(true);
+      if (code) {
+        toast.dismiss("export-transform");
+        // We delay slightly to ensure state or just use the returned code
+        const currentLang = LANGUAGES.find(l => l.id === selectedLanguage) || LANGUAGES[0];
+        const fileName = file ? file.name.split('.')[0] : "cybermedida_logic";
+        downloadBlob(code, `${fileName}_${new Date().getTime()}.${currentLang.ext}`, currentLang.mime);
+      } else {
+        toast.error("Falló la generación automática", { id: "export-transform" });
+      }
+    }
+  };
+
+  const downloadBlob = (content: string, filename: string, mimeType: string) => {
+    if (!content || content.trim() === "") {
+      toast.error("No hay contenido para descargar", {
+        description: "Primero debes extraer o transformar algún contenido."
+      });
+      return;
+    }
+    try {
+      const blob = new Blob([content], { type: mimeType });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      
+      // Mandatory for iFrame/mobile downloads
+      document.body.appendChild(link);
+      link.click();
+      
+      // Small delay for browser interaction
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+      toast.success(`Descarga Iniciada`, {
+        description: `Archivo ${filename} generado con éxito.`
+      });
+    } catch (err) {
+      console.error("Download error:", err);
+      toast.error("Error de Descarga", {
+        description: "El sistema no pudo procesar la solicitud de descarga local."
+      });
+    }
+  };
+
+  const downloadMarkdown = () => {
+    const fileName = file ? file.name.split('.')[0] : "cybermedida_export";
+    downloadBlob(markdown, `${fileName}_${new Date().getTime()}.md`, "text/markdown");
+  };
+
+  const downloadCode = () => {
+    const currentLang = LANGUAGES.find(l => l.id === selectedLanguage) || LANGUAGES[0];
+    const fileName = file ? file.name.split('.')[0] : "cybermedida_logic";
+    downloadBlob(generatedCode, `${fileName}_${new Date().getTime()}.${currentLang.ext}`, currentLang.mime);
+  };
+
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
@@ -66,58 +187,55 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
     }
   }, []);
 
-  const downloadMarkdown = () => {
-    if (!markdown) return;
-    const blob = new Blob([markdown], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const fileName = file ? file.name.split('.')[0] : "cybermedida_export";
-    a.download = `${fileName}_${new Date().getTime()}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Descarga iniciada", { icon: <Download className="w-4 h-4 text-indigo-600" /> });
-  };
-
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(markdown);
+    const textToCopy = viewMode === "code" ? generatedCode : markdown;
+    navigator.clipboard.writeText(textToCopy);
     toast.success("Copiado al portapapeles");
   };
 
   const clearWorkspace = () => {
     setMarkdown("");
+    setGeneratedCode("");
     setFile(null);
     toast.info("Espacio de trabajo despejado");
   };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom duration-700">
-      <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Herramientas / <span className="text-indigo-600">Conversor Universal</span>
-            </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Extracción MarkItDown</h2>
-            <p className="text-sm text-slate-500">Convierte documentos complejos (PDF, DOCX, XLSX, IMG) en Markdown estructurado.</p>
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-1">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Herramientas / <span className="text-indigo-600">Conversor Universal</span>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={clearWorkspace} 
-              disabled={!markdown && !file}
-              className="rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-bold uppercase tracking-widest text-[10px] h-10 px-4"
-            >
-              <Trash2 className="w-3 h-3 mr-2" /> Limpiar
-            </Button>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Extracción MarkItDown</h2>
+          <p className="text-sm text-slate-500">Convierte documentos complejos (PDF, DOCX, XLSX, IMG) en Markdown y Lógica de IA.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={clearWorkspace} 
+            disabled={!markdown && !file}
+            className="rounded-xl border-slate-200 text-slate-500 hover:bg-slate-50 font-bold uppercase tracking-widest text-[10px] h-10 px-4 flex-1 sm:flex-none shadow-sm"
+          >
+            <Trash2 className="w-3 h-3 mr-2" /> Limpiar
+          </Button>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button 
               onClick={downloadMarkdown}
               disabled={!markdown}
-              className="rounded-xl bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-slate-100 transition-all"
+              className="flex-1 sm:flex-none rounded-xl bg-slate-900 hover:bg-black text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-md shadow-slate-200 transition-all active:scale-95"
             >
-              <Download className="w-3.5 h-3.5 mr-2" /> Descargar .MD
+              <Download className="w-3.5 h-3.5 mr-2" /> Exportar .MD
+            </Button>
+            
+            <Button 
+              onClick={handleExportCode}
+              disabled={!markdown || isTransforming}
+              className="flex-1 sm:flex-none rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-md shadow-indigo-100 transition-all active:scale-95"
+            >
+              {isTransforming ? <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-2" />}
+              Exportar .{LANGUAGES.find(l => l.id === selectedLanguage)?.ext || 'code'}
             </Button>
           </div>
         </div>
@@ -202,19 +320,41 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
              <div className="relative z-10 space-y-4">
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Status: Terminal Local Ready</p>
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Status: AI Transformer Active</p>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                  El motor MarkItDown procesa archivos binarios en tiempo real, transformándolos en un flujo de datos compatible con agentes LLM y sistemas de documentación.
-                </p>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <div className="px-2 py-0.5 bg-white/10 rounded text-[9px] font-bold uppercase tracking-wider">PDF-OCR</div>
-                  <div className="px-2 py-0.5 bg-white/10 rounded text-[9px] font-bold uppercase tracking-wider">DOCX-XML</div>
-                  <div className="px-2 py-0.5 bg-white/10 rounded text-[9px] font-bold uppercase tracking-wider">XL-MAP</div>
+                
+                <div className="space-y-2">
+                  <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Lenguaje de Destino</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang.id}
+                        onClick={() => setSelectedLanguage(lang.id)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all",
+                          selectedLanguage === lang.id 
+                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/50" 
+                            : "bg-slate-800 text-slate-400 hover:text-slate-200"
+                        )}
+                      >
+                        {lang.icon}
+                        {lang.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                <Button 
+                   onClick={() => transformToCode()}
+                   disabled={!markdown || isTransforming}
+                   className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[9px] h-10 shadow-lg shadow-indigo-900/40"
+                >
+                   {isTransforming ? <RefreshCw className="w-3 h-3 mr-2 animate-spin" /> : <Cpu className="w-3 h-3 mr-2" />}
+                   TRANSFORMAR A {selectedLanguage.toUpperCase()}
+                </Button>
              </div>
              <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 blur-sm scale-150">
-                <FileCode className="w-24 h-24" />
+                <Terminal className="w-24 h-24" />
              </div>
           </Card>
         </div>
@@ -223,24 +363,33 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
         <div className="lg:col-span-8 flex flex-col gap-4 min-h-[600px]">
           <Card className="rounded-3xl border-slate-200 shadow-2xl bg-white overflow-hidden flex-1 flex flex-col border-none">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 flex flex-row items-center justify-between px-8 py-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 <div 
                   onClick={() => setViewMode("edit")}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest cursor-pointer transition-all uppercase",
-                    viewMode === "edit" ? "bg-white shadow-md text-indigo-600 scale-105" : "text-slate-400 hover:text-slate-600"
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-widest cursor-pointer transition-all uppercase whitespace-nowrap",
+                    viewMode === "edit" ? "bg-white shadow-sm text-indigo-600 ring-1 ring-slate-200" : "text-slate-400 hover:text-slate-600"
                   )}
                 >
-                  <Code className="w-3.5 h-3.5" /> RAW
+                  <Code className="w-3 h-3" /> RAW MD
                 </div>
                 <div 
                   onClick={() => setViewMode("preview")}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold tracking-widest cursor-pointer transition-all uppercase",
-                    viewMode === "preview" ? "bg-white shadow-md text-indigo-600 scale-105" : "text-slate-400 hover:text-slate-600"
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-widest cursor-pointer transition-all uppercase whitespace-nowrap",
+                    viewMode === "preview" ? "bg-white shadow-sm text-indigo-600 ring-1 ring-slate-200" : "text-slate-400 hover:text-slate-600"
                   )}
                 >
-                  <Eye className="w-3.5 h-3.5" /> PREVIEW
+                  <Eye className="w-3 h-3" /> PREVIEW
+                </div>
+                <div 
+                  onClick={() => setViewMode("code")}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-widest cursor-pointer transition-all uppercase whitespace-nowrap",
+                    viewMode === "code" ? "bg-white shadow-sm text-amber-600 ring-1 ring-slate-200" : "text-slate-400 hover:text-slate-600"
+                  )}
+                >
+                  <Terminal className="w-3 h-3" /> {selectedLanguage.toUpperCase()} ENGINE
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -248,8 +397,8 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
                   variant="ghost" 
                   size="sm" 
                   onClick={copyToClipboard}
-                  disabled={!markdown}
-                  className="h-9 px-4 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-white font-bold text-[9px] uppercase tracking-widest"
+                  disabled={viewMode === "code" ? !generatedCode : !markdown}
+                  className="h-8 px-3 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white font-bold text-[9px] uppercase tracking-widest"
                 >
                   <Copy className="w-3.5 h-3.5 mr-2" /> COPIAR
                 </Button>
@@ -260,9 +409,18 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
                 <Textarea 
                   value={markdown}
                   onChange={(e) => setMarkdown(e.target.value)}
-                  placeholder="El contenido extraído aparecerá aquí. Puedes editar directamente el Markdown para refinar los resultados..."
+                  placeholder="El contenido extraído aparecerá aquí..."
                   className="w-full h-full border-none focus:ring-0 rounded-none p-10 font-mono text-xs leading-relaxed resize-none bg-transparent min-h-[500px]"
                 />
+              ) : viewMode === "code" ? (
+                <div className="p-0 flex flex-col h-full bg-slate-900">
+                   <Textarea 
+                      value={generatedCode}
+                      onChange={(e) => setGeneratedCode(e.target.value)}
+                      placeholder={`Ejecuta 'TRANSFORMAR A ${selectedLanguage.toUpperCase()}' para generar el script de automatización...`}
+                      className="w-full h-full border-none focus:ring-0 rounded-none p-10 font-mono text-[11px] leading-relaxed resize-none bg-transparent min-h-[500px] text-emerald-400"
+                   />
+                </div>
               ) : (
                 <div className="p-10 markdown-body prose prose-slate max-w-none prose-headings:font-extrabold prose-p:text-slate-600 prose-sm h-full overflow-y-auto bg-white min-h-[500px] border-none">
                   {markdown ? (
@@ -287,19 +445,20 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
              <div className="flex items-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                  <span>C: {markdown.length}</span>
+                  <span>Size: {viewMode === "code" ? generatedCode.length : markdown.length}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                  <span>L: {markdown.split("\n").length}</span>
+                  <span>Node: CM-EXTRACTOR-A1</span>
                 </div>
              </div>
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> MarkItDown V2.4 Pipeline Operativo
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Pipeline {viewMode === "code" ? "Code Transform" : "MarkItDown"} Operativo
              </p>
           </div>
         </div>
       </div>
     </div>
+
   );
 }

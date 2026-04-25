@@ -41,12 +41,14 @@ const data = [
 export function Dashboard({ db }: DashboardProps) {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Proyectos / <span className="text-indigo-600">CyberMedida WebApp v2.1</span>
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-1">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Proyectos / <span className="text-indigo-600">CyberMedida WebApp v2.1</span>
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Vista General</h2>
+          <p className="text-sm text-slate-500">Rendimiento global del sistema y asignación de recursos.</p>
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Vista General</h2>
-        <p className="text-sm text-slate-500">Rendimiento global del sistema y asignación de recursos.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

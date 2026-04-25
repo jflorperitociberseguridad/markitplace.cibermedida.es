@@ -6,10 +6,22 @@ import multer from "multer";
 import { fileURLToPath } from "url";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const execPromise = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Initialize Gemini (Lazy)
+let genAI: any = null;
+function getGenAI() {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not defined");
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  return genAI;
+}
 
 const DATA_DIR = path.join(__dirname, "data");
 const UPLOADS_DIR = path.join(__dirname, "uploads");
@@ -90,6 +102,39 @@ async function startServer() {
     fs.writeFileSync(DB_FILE, JSON.stringify(req.body, null, 2));
     res.json({ status: "ok" });
   });
+  
+  // Logic Transformation Route
+  app.post("/api/transform", async (req, res) => {
+    const { markdown, language } = req.body;
+    if (!markdown || !language) {
+      return res.status(400).json({ error: "Markdown and language are required" });
+    }
+
+    try {
+      const ai = getGenAI();
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const prompt = `Actúa como un Ingeniero de Software experto especializado en ${language}. 
+      Transforma el siguiente contenido Markdown en un script de ${language} optimizado, profesional y autodocumentado. 
+      Si el contenido describe un proceso, automatízalo. Si son datos, crea estructuras de datos eficientes.
+      Incluye manejo de errores y comentarios detallados en español.
+      IMPORTANTE: Devuelve EXCLUSIVAMENTE el código fuente, sin explicaciones ni bloques markdown.
+      
+      CONTENIDO A TRANSFORMAR:
+      ${markdown}`;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      
+      // Cleanup markdown artifacts
+      const code = responseText.replace(/```[a-z]*\n?|```/g, "").trim();
+      
+      res.json({ code });
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      res.status(500).json({ error: "Error en la generación de IA", details: String(error) });
+    }
+  });
 
   app.post("/api/convert", upload.single("file"), async (req: any, res) => {
     if (!req.file) {
@@ -97,40 +142,28 @@ async function startServer() {
     }
 
     const filePath = req.file.path;
-    const outputPath = `${filePath}.md`;
-
+    const extension = path.extname(req.file.originalname).toLowerCase();
+    
     try {
       let markdown = "";
       
-      try {
-        // Attempt to use markitdown CLI directly
-        // We use spawn or exec. Exec is simpler for this one-liner.
-        // We try different command variations to be safe
-        await execPromise(`markitdown "${filePath}" > "${outputPath}"`);
+      if (extension === ".pdf") {
+        const pdfModule: any = await import("pdf-parse");
+        const parsePdf = pdfModule.default || pdfModule;
         
-        if (fs.existsSync(outputPath)) {
-          markdown = fs.readFileSync(outputPath, "utf-8");
-          fs.unlinkSync(outputPath);
-        } else {
-          // Alternative if stdout redirection didn't work
-          await execPromise(`markitdown "${filePath}" -o "${outputPath}"`);
-          markdown = fs.readFileSync(outputPath, "utf-8");
-          fs.unlinkSync(outputPath);
-        }
-      } catch (cliError) {
-        console.warn("MarkItDown CLI fallback triggered:", cliError);
-        
-        // Final fallback for demo/preview where python might not be set up
-        const extension = path.extname(req.file.originalname).toLowerCase();
-        const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"];
-        
-        if ([".txt", ".md", ".json", ".js", ".ts"].includes(extension)) {
-          markdown = fs.readFileSync(filePath, "utf-8");
-        } else if (imageExtensions.includes(extension)) {
-          markdown = `# Análisis de Imagen: ${req.file.originalname}\n\n**Estado:** Procesado como recurso visual.\n\nEl motor MarkItDown utiliza OCR (Reconocimiento Óptico de Caracteres) para extraer texto de imágenes. En este entorno de demostración, estamos simulando la extracción estructurada.\n\n![${req.file.originalname}](https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800)\n\n---\n*Metadatos de la Muestra:*\n- Tipo: ${req.file.mimetype}\n- Tamaño: ${(req.file.size / 1024).toFixed(2)} KB\n- Dimensión Detectada: 1920x1080 (Simulado)`;
-        } else {
-          markdown = `# ${req.file.originalname}\n\n**Informe de Extracción:**\n\nEste documento fue procesado mediante el protocolo MarkItDown. En su VPS de producción, asegúrese de ejecutar \`pip install markitdown\` para habilitar la extracción binaria completa (PDF, DOCX, etc).\n\n---\n\n## Muestra del Flujo de Datos\n\n\`\`\`\n${fs.readFileSync(filePath, "utf-8").slice(0, 800)}...\n\`\`\`\n\n*Estado del Sistema: Listo para Despliegue en Producción*`;
-        }
+        const dataBuffer = fs.readFileSync(filePath);
+        const data = await parsePdf(dataBuffer);
+        markdown = `# Documento PDF: ${req.file.originalname}\n\n${data.text}`;
+      } else if (extension === ".docx") {
+        const mammoth: any = await import("mammoth");
+        const extract = mammoth.default?.extractRawText || mammoth.extractRawText;
+        const result = await extract({ path: filePath });
+        markdown = `# Documento Word: ${req.file.originalname}\n\n${result.value}`;
+      } else if ([".txt", ".md", ".json", ".csv"].includes(extension)) {
+        markdown = fs.readFileSync(filePath, "utf-8");
+      } else {
+        // Fallback or Image parsing (simulation/AI)
+        markdown = `# Archivo: ${req.file.originalname}\n\n**Nota de Extracción:** El sistema detectó un archivo de tipo ${extension}. \n\nContenido crudo (primeros 500 caracteres):\n\n\`\`\`\n${fs.readFileSync(filePath, "utf-8").slice(0, 500)}...\n\`\`\``;
       }
       
       // Update stats
@@ -145,7 +178,11 @@ async function startServer() {
       });
     } catch (error) {
       console.error("Critical conversion error:", error);
-      res.status(500).json({ error: "Error en el motor de conversión" });
+      // More descriptive error
+      res.status(500).json({ 
+        error: "Error en el motor de conversión MarkItDown",
+        details: error instanceof Error ? error.message : String(error)
+      });
     } finally {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);

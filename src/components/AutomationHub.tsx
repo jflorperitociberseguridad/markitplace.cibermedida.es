@@ -112,7 +112,7 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
       const ai = new GoogleGenAI({ apiKey });
       
       const history = messages.map(m => ({
-        role: m.role,
+        role: m.role === "user" ? "user" : "model",
         parts: [{ text: m.text }]
       }));
 
@@ -221,30 +221,28 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-right duration-700 relative h-full">
-      <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Repositorio / <span className="text-indigo-600">Bóveda de Automatización</span>
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-1">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Repositorio / <span className="text-indigo-600">Bóveda de Automatización</span>
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Centro de Automatización</h2>
+          <p className="text-sm text-slate-500">Almacenamiento centralizado de scripts validados y lógica de orquestación IA.</p>
         </div>
-        <div className="flex justify-between items-end">
-          <div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Centro de Automatización</h2>
-            <p className="text-sm text-slate-500">Almacenamiento centralizado de scripts validados y lógica de orquestación IA.</p>
-          </div>
-          <div className="flex gap-3">
-            <Button 
-              variant="outline"
-              onClick={startConsultant}
-              className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold uppercase tracking-widest text-[10px] h-10 px-6 transition-all"
-            >
-              <Bot className="w-4 h-4 mr-2" /> Consultor de IA
-            </Button>
-            <Button 
-              onClick={() => setIsNewScriptOpen(true)}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-indigo-100 transition-all"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Nuevo Script
-            </Button>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            variant="outline"
+            onClick={startConsultant}
+            className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-bold uppercase tracking-widest text-[10px] h-10 px-6 transition-all flex-1 sm:flex-none"
+          >
+            <Bot className="w-4 h-4 mr-2" /> Consultor de IA
+          </Button>
+          <Button 
+            onClick={() => setIsNewScriptOpen(true)}
+            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-widest text-[10px] h-10 px-6 shadow-lg shadow-indigo-100 transition-all flex-1 sm:flex-none"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Nuevo Script
+          </Button>
         </div>
       </header>
 
@@ -327,8 +325,8 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
         </DialogContent>
       </Dialog>
       {isConsultantOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-sm p-4">
-          <Card className="w-full max-w-lg h-[90vh] flex flex-col shadow-2xl rounded-2xl overflow-hidden border-none animate-in slide-in-from-right duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 backdrop-blur-sm lg:p-4">
+          <Card className="w-full lg:max-w-lg h-full lg:h-[90vh] flex flex-col shadow-2xl lg:rounded-2xl overflow-hidden border-none animate-in slide-in-from-right duration-300">
             <CardHeader className="bg-indigo-600 text-white p-6 flex flex-row items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-xl">

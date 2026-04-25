@@ -107,12 +107,14 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-700">
-      <header className="flex flex-col gap-1 border-b border-slate-200 pb-6">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Laboratorio / <span className="text-indigo-600">Nodo de Ingeniería de Prompts</span>
+      <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-1">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Laboratorio / <span className="text-indigo-600">Nodo de Ingeniería de Prompts</span>
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Lab de Prompts Avanzado</h2>
+          <p className="text-sm text-slate-500">Configura parámetros para generar directivas de IA de alta precisión.</p>
         </div>
-        <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">Lab de Prompts Avanzado</h2>
-        <p className="text-sm text-slate-500">Configura parámetros para generar directivas de IA de alta precisión.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
