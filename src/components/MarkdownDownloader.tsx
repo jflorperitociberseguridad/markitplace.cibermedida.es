@@ -25,6 +25,7 @@ import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import { DB } from "../types";
+import { getAIConfig } from "../aiConfig";
 
 export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB) => void }) {
   const [markdown, setMarkdown] = useState<string>("");
@@ -83,10 +84,13 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
     try {
       const currentLang = LANGUAGES.find(l => l.id === selectedLanguage) || LANGUAGES[0];
       
+      const { provider, model, apiKey } = getAIConfig();
       const response = await axios.post("/api/transform", {
         markdown,
         language: currentLang.name,
-        apiKey: localStorage.getItem("GEMINI_API_KEY")
+        apiKey,
+        provider,
+        model,
       });
 
       const code = response.data.code || "";
