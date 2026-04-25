@@ -21,8 +21,8 @@ import {
   Check
 } from "lucide-react";
 import { DB, SavedPrompt } from "../types";
-import { GoogleGenAI } from "@google/genai";
 import { toast } from "sonner";
+import axios from "axios";
 
 interface PromptGeneratorProps {
   db: DB;
@@ -47,23 +47,17 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
 
     setLoading(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-      const prompt = `Act as an expert prompt engineer. 
-      Generate a highly effective system prompt based on:
-      - MISSION: ${topic}
-      - AUDIENCE: ${audience || "General"}
-      - FORMAT: ${format}
-      - STYLE: ${style}
-      - DETAIL: ${detail}
-      
-      Return ONLY the optimized prompt content, no conversational filler.`;
+      const payload = {
+        topic,
+        audience,
+        format,
+        style,
+        detail,
+        apiKey: localStorage.getItem("GEMINI_API_KEY")
+      };
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-      });
-
-      const result = response.text || "Generation failure";
+      const response = await axios.post("/api/generate-prompt", payload);
+      const result = response.data.prompt || "Generation failure";
       setGeneratedPrompt(result);
       
       const newDb = { ...db };
@@ -71,9 +65,10 @@ export function PromptGenerator({ db, updateDb }: PromptGeneratorProps) {
       updateDb(newDb);
       
       toast.success("Prompt generado con éxito");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Error de conexión con el Nodo IA");
+      const errorMsg = error.response?.data?.details || error.message;
+      toast.error("Error de conexión con el Nodo IA", { description: errorMsg });
     } finally {
       setLoading(false);
     }

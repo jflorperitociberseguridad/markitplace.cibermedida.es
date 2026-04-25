@@ -14,7 +14,10 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Gemini (Lazy)
 let genAI: any = null;
-function getGenAI() {
+function getGenAI(customApiKey?: string) {
+  if (customApiKey) {
+    return new GoogleGenerativeAI(customApiKey);
+  }
   if (!genAI) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY is not defined");
@@ -103,15 +106,89 @@ async function startServer() {
     res.json({ status: "ok" });
   });
   
+  // Generate Prompt Route
+  app.post("/api/generate-prompt", async (req, res) => {
+    const { topic, audience, format, style, detail, apiKey } = req.body;
+    
+    if (!topic) {
+      return res.status(400).json({ error: "Topic is required" });
+    }
+
+    try {
+      const ai = getGenAI(apiKey);
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-pro" });
+      
+      const promptText = `Act as an expert prompt engineer. 
+      Generate a highly effective system prompt based on:
+      - MISSION: ${topic}
+      - AUDIENCE: ${audience || "General"}
+      - FORMAT: ${format}
+      - STYLE: ${style}
+      - DETAIL: ${detail}
+      
+      Return ONLY the optimized prompt content, no conversational filler.`;
+
+      const result = await model.generateContent(promptText);
+      const responseText = result.response.text();
+      
+      res.json({ prompt: responseText });
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      res.status(500).json({ error: "Error en la generación de IA", details: String(error) });
+    }
+  });
+
+  // Automation Chat Route
+  app.post("/api/automation-chat", async (req, res) => {
+    const { messages, text, apiKey } = req.body;
+    
+    if (!messages || !text) {
+      return res.status(400).json({ error: "Messages and text are required" });
+    }
+
+    try {
+      const ai = getGenAI(apiKey);
+      const model = ai.getGenerativeModel({ 
+        model: "gemini-1.5-pro",
+        systemInstruction: `Eres un Arquitecto de Automatización experto de CyberMedida. Tu objetivo es ayudar al usuario a automatizar sus procesos y conexiones de datos.
+          
+          ESTRATEGIA:
+          1. Haz preguntas inteligentes y breves, de una en una, para entender el flujo de trabajo.
+          2. Pregunta específicamente por:
+             - Herramientas involucradas (Google Sheets, Notion, Stripe, etc).
+             - Evento disparador (Trigger).
+             - Acción principal deseada.
+             - Reglas o condiciones críticas.
+             - Formato de salida y necesidades de extracción.
+          3. SÉ PROACTIVO: Sugiere opciones que el usuario quizás no ha considerado.
+          4. FORMATO: Usa Markdown para que la respuesta sea legible.
+          5. Al final, cuando tengas suficiente información, propón una "Receta de Automatización" detallada con pasos técnicos.`
+      });
+      
+      const history = messages.map((m: any) => ({
+        role: m.role === "user" ? "user" : "model",
+        parts: [{ text: m.text }]
+      }));
+
+      const chat = model.startChat({ history });
+      const result = await chat.sendMessage(text);
+      
+      res.json({ text: result.response.text() });
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      res.status(500).json({ error: "Error de IA", details: String(error) });
+    }
+  });
+
   // Logic Transformation Route
   app.post("/api/transform", async (req, res) => {
-    const { markdown, language } = req.body;
+    const { markdown, language, apiKey } = req.body;
     if (!markdown || !language) {
       return res.status(400).json({ error: "Markdown and language are required" });
     }
 
     try {
-      const ai = getGenAI();
+      const ai = getGenAI(apiKey);
       const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
       
       const prompt = `Actúa como un Ingeniero de Software experto especializado en ${language}. 

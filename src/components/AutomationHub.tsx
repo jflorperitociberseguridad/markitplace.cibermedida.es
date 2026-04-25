@@ -25,7 +25,7 @@ import {
 import { DB, SavedPrompt } from "../types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { GoogleGenAI } from "@google/genai";
+import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import { 
   Dialog, 
@@ -100,52 +100,21 @@ export function AutomationHub({ db, updateDb }: AutomationHubProps) {
     setIsThinking(true);
 
     try {
-      const userApiKey = localStorage.getItem("GEMINI_API_KEY");
-      const apiKey = userApiKey || (process.env as any).GEMINI_API_KEY;
-      
-      if (!apiKey) {
-        toast.error("Falta la API Key de Gemini. Configúrala en Ajustes.");
-        setIsThinking(false);
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const history = messages.map(m => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.text }]
-      }));
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
-        contents: [
-          ...history,
-          { role: "user", parts: [{ text: inputText }] }
-        ],
-        config: {
-          systemInstruction: `Eres un Arquitecto de Automatización experto de CyberMedida. Tu objetivo es ayudar al usuario a automatizar sus procesos y conexiones de datos.
-          
-          ESTRATEGIA:
-          1. Haz preguntas inteligentes y breves, de una en una, para entender el flujo de trabajo.
-          2. Pregunta específicamente por:
-             - Herramientas involucradas (Google Sheets, Notion, Stripe, etc).
-             - Evento disparador (Trigger).
-             - Acción principal deseada.
-             - Reglas o condiciones críticas.
-          3. SÉ PROACTIVO: Sugiere opciones que el usuario quizás no ha considerado.
-          4. FORMATO: Usa Markdown para que la respuesta sea legible.
-          5. Al final, cuando tengas suficiente información, propón una "Receta de Automatización" detallada con pasos técnicos.`,
-        }
+      const response = await axios.post("/api/automation-chat", {
+        messages,
+        text: userMessage.text,
+        apiKey: localStorage.getItem("GEMINI_API_KEY")
       });
 
       const modelMessage: Message = { 
         role: "model", 
-        text: response.text || "Lo siento, mi nodo de procesamiento ha tenido un hipo. ¿Podemos intentarlo de nuevo?"
+        text: response.data.text || "Lo siento, mi nodo de procesamiento ha tenido un hipo. ¿Podemos intentarlo de nuevo?"
       };
       setMessages(prev => [...prev, modelMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Consultant error:", error);
-      toast.error("Error de conexión con el Consultor IA");
+      const errorMsg = error.response?.data?.details || error.message;
+      toast.error("Error de conexión con el Consultor IA", { description: errorMsg });
     } finally {
       setIsThinking(false);
     }

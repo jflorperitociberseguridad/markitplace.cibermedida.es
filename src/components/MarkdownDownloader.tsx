@@ -85,7 +85,8 @@ export function MarkdownDownloader({ db, updateDb }: { db: DB, updateDb: (db: DB
       
       const response = await axios.post("/api/transform", {
         markdown,
-        language: currentLang.name
+        language: currentLang.name,
+        apiKey: localStorage.getItem("GEMINI_API_KEY")
       });
 
       const code = response.data.code || "";
